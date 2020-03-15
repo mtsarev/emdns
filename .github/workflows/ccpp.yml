@@ -13,5 +13,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: make
+    - name: make (default options)
       run: make
+    - name: make (all classes enabled)
+      run: make CFLAGS=-DEMDNS_SUPPORT_ALL_CLASSES

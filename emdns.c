@@ -4,6 +4,7 @@
 #include "emsettings.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "arpa/inet.h"
 
 typedef struct emdns_record_t{
     struct emdns_record_t* next;
@@ -48,7 +49,7 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
                 entry->length = sizeof(uint16_t) + strlen(response) + 2;
                 uint16_t preference = 0;
                 entry->response = malloc(entry->length);
-                int res = sscanf(response, "%d %s", &preference, (entry->response + 2));
+                int res = sscanf(response, "%hd %s", &preference, (entry->response + 2));
                 
                 *((uint16_t*)entry->response) = htons(preference);
                 char* dns_str = _to_dns_string(entry->response + 2);

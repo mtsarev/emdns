@@ -5,6 +5,15 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+typedef struct emdns_record_t{
+    struct emdns_record_t* next;
+    dns_record_t record_type;
+    char* domain;
+    char* response;
+    uint16_t length;
+} emdns_record_t;
+
+
 static emdns_record_t* records;
 
 static char* _to_dns_string(char* domain);
@@ -95,8 +104,30 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
 }
 
 int emdns_remove_record(char* domain, dns_record_t record_type) {
-    // not supported yet
-    return -1;
+    char* dns_string = _to_dns_string(domain);
+    emdns_record_t* ptr_record = records;
+    emdns_record_t* ptr_prev = 0;
+    uint8_t records_removed = 0;
+    while (ptr_record != 0) {
+        if (ptr_record->record_type == record_type &&
+                strcmp(ptr_record->domain, dns_string) == 0) {
+            if(ptr_record == records){
+                records = ptr_record->next;
+            }
+            else{
+                ptr_prev->next = ptr_record->next;
+            }
+            emdns_record_t* next = ptr_record->next;
+            free(ptr_record);
+            records_removed++;
+            ptr_record = next;
+            continue;
+        }
+        ptr_prev = ptr_record;
+        ptr_record = ptr_record->next;
+    }
+    free(dns_string);
+    return records_removed; 
 }
 
 static char* _to_dns_string(char* domain) {

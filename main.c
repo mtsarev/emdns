@@ -45,10 +45,12 @@ int main(int argc, char** argv) {
     emdns_add_record("78.56.34.12.in-addr.arpa", RecordPTR, "domain.com");
     emdns_add_record("mail.domain.com", RecordCNAME, "domain.com");
     emdns_add_record("domain.com", RecordMX, "10 mail.domain.com");
+    emdns_add_record("domain.com", RecordMX, "20 mail2.domain.com");
     emdns_add_record("domain.com", RecordTXT, "v=spf1 mx a:mail.domain.com -all");
     emdns_add_record("example.com", RecordA, "22.33.44.55");
     emdns_add_record("example.com", RecordNS, "mail.domain.com");
     emdns_add_record("google.com", RecordA, "8.8.8.8");
+    emdns_remove_record("domain.com", RecordMX);
     
     while(1){
         n = recvfrom(sockfd, (char *)buffer, MAXLINE,  

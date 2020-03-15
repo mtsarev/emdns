@@ -1,7 +1,6 @@
 #include "stdlib.h"
 #include "string.h"
 #include "emdns.h"
-#include "emsettings.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "arpa/inet.h"
@@ -9,6 +8,9 @@
 typedef struct emdns_record_t{
     struct emdns_record_t* next;
     dns_record_t record_type;
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+    dns_class_t record_class;
+#endif    
     char* domain;
     char* response;
     uint16_t length;
@@ -19,9 +21,19 @@ static emdns_record_t* records;
 
 static char* _to_dns_string(char* domain);
 static uint32_t _to_ip_value(char* ip);
-static emdns_record_t* _find_record(char* domain, dns_record_t record_type);
 
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class);
+#else
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type);
+#endif
+
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response) {
+#else
 int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
+#endif    
+    
 #ifdef EMDNS_ENABLE_LOGGING    
     printf("Added record.\n");
 #endif
@@ -30,6 +42,9 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
     if (entry != 0) {
         entry->domain = _to_dns_string(domain);
         entry->record_type = record_type;
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+        entry->record_class = record_class;
+#endif        
         
         switch(record_type){
             case RecordA:
@@ -104,13 +119,20 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
     return -1;
 }
 
-int emdns_remove_record(char* domain, dns_record_t record_type) {
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+int emdns_remove_record(char* domain, dns_record_t record_type, dns_class_t record_class) {
+#else
+int emdns_remove_record(char* domain, dns_record_t record_type) {    
+#endif    
     char* dns_string = _to_dns_string(domain);
     emdns_record_t* ptr_record = records;
     emdns_record_t* ptr_prev = 0;
     uint8_t records_removed = 0;
     while (ptr_record != 0) {
         if (ptr_record->record_type == record_type &&
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+                ptr_record->record_class == record_class &&
+#endif                
                 strcmp(ptr_record->domain, dns_string) == 0) {
             if(ptr_record == records){
                 records = ptr_record->next;
@@ -172,10 +194,17 @@ static uint32_t _to_ip_value(char* ip) {
     return ip_value;
 }
 
-emdns_record_t* _find_record(char* domain, dns_record_t record_type) {
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class){
+#else
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type) {
+#endif
     emdns_record_t* ptr_record = records;
     while (ptr_record != 0) {
         if (ptr_record->record_type == record_type &&
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+                ptr_record->record_class == record_class &&
+#endif                
                 strcmp(ptr_record->domain, domain) == 0) {
             return ptr_record;
         }
@@ -202,8 +231,12 @@ void emdns_resolve_raw(char* request_buffer, char** response_buffer, uint16_t* a
     char* p = (request_buffer + sizeof (dns_header_t));
     uint8_t len = strlen(p);
     dns_record_t type = (dns_record_t) ntohs((*(uint16_t*) (p + len + 1)));
-
-    emdns_record_t* record = _find_record(p, type);
+    dns_record_t class = (dns_record_t) ntohs((*(uint16_t*) (p + len + 3)));
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+    emdns_record_t* record = _find_record(p, type, class);
+#else
+    emdns_record_t* record = (class == ClassIN ? _find_record(p, type) : 0);
+#endif
 
     if (record != 0) {
 #ifdef EMDNS_ENABLE_LOGGING

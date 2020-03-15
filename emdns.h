@@ -1,8 +1,21 @@
 #ifndef EMDNS_H
 #define EMDNS_H
 
+#include "emsettings.h"
 #include "dns.h"
 
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+/**
+ * Add a record to the DNS zone.
+ * 
+ * @param domain domain name
+ * @param record_type record type
+ * @param record_class record class
+ * @param response response to return
+ * @return 0 = success, everything else is an error code
+ */
+int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response);
+#else
 /**
  * Add a record to the DNS zone.
  * 
@@ -12,7 +25,19 @@
  * @return 0 = success, everything else is an error code
  */
 int emdns_add_record(char* domain, dns_record_t record_type, char* response);
+#endif
 
+#ifdef EMDNS_SUPPORT_ALL_CLASSES
+/**
+ * Remove records from the DNS zone. Will remove all entries of this type. 
+ * 
+ * @param domain domain name
+ * @param record_type the record type
+ * @param record_class record class
+ * @return returns the number of entries removed
+ */
+int emdns_remove_record(char* domain, dns_record_t record_type, dns_class_t record_class);
+#else
 /**
  * Remove records from the DNS zone. Will remove all entries of this type. 
  * 
@@ -21,6 +46,7 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response);
  * @return returns the number of entries removed
  */
 int emdns_remove_record(char* domain, dns_record_t record_type);
+#endif
 
 /**
  * Resolve a DNS entry based on the DNS query in request_buffer. Pass the query

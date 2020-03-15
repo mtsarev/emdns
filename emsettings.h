@@ -4,7 +4,7 @@
 // repeat queries in the response
 #define EMDNS_ECHO_QUERIES 0
 
-//#define EMDNS_ENABLE_LOGGING
+#define EMDNS_ENABLE_LOGGING
 
 #endif /* EMSETTINGS_H */
 

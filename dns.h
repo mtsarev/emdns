@@ -3,6 +3,9 @@
 
 #include "stdint.h"
 
+/**
+ * DNS packet header.
+ */
 typedef struct __attribute__((packed)) {
     uint16_t id;
     uint16_t flags;
@@ -13,6 +16,9 @@ typedef struct __attribute__((packed)) {
 }
 dns_header_t;
 
+/**
+ * DNS record types.
+ */
 typedef enum {
     RecordA = 1,
     RecordNS = 2,
@@ -23,10 +29,20 @@ typedef enum {
     RecordTXT = 16
 } dns_record_t;
 
+/**
+ * DNS record classes.
+ */
 typedef enum {
-    ClassIN = 1
+    ClassIN = 1,    ///< Internet
+    ClassCS = 2,    ///< CSNET (obsolete)
+    ClassCH = 3,    ///< Chaos (obsolete)
+    ClassHS = 4,    ///< Hesoid (obsolete)
+    ClassANY = 255  ///< for requests only
 } dns_class_t;
 
+/**
+ * Flags used in DNS packet header.
+ */
 typedef enum {
     FlagQR = 0x8000,
     FlagAA = 0x0400,

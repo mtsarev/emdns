@@ -40,17 +40,26 @@ int main(int argc, char** argv) {
     
     len = sizeof(cliaddr);
     
-    emdns_add_record("domain.com", RecordSOA, "ns1.server.com info.domain.com 2019102611 7200 3600 1209600 3600");
-    emdns_add_record("domain.com", RecordA, "12.34.56.78");
-    emdns_add_record("78.56.34.12.in-addr.arpa", RecordPTR, "domain.com");
-    emdns_add_record("mail.domain.com", RecordCNAME, "domain.com");
-    emdns_add_record("domain.com", RecordMX, "10 mail.domain.com");
-    emdns_add_record("domain.com", RecordMX, "20 mail2.domain.com");
-    emdns_add_record("domain.com", RecordTXT, "v=spf1 mx a:mail.domain.com -all");
-    emdns_add_record("example.com", RecordA, "22.33.44.55");
-    emdns_add_record("example.com", RecordNS, "mail.domain.com");
-    emdns_add_record("google.com", RecordA, "8.8.8.8");
-    emdns_remove_record("domain.com", RecordMX);
+#ifdef EMDNS_SUPPORT_ALL_CLASSES  
+#define CLASS ,ClassIN
+#else
+#define CLASS
+#endif
+    emdns_add_record("domain.com", RecordSOA CLASS, "ns1.server.com info.domain.com 2019102611 7200 3600 1209600 3600");
+    emdns_add_record("domain.com", RecordA CLASS, "12.34.56.78");
+    emdns_add_record("78.56.34.12.in-addr.arpa", RecordPTR CLASS, "domain.com");
+    emdns_add_record("mail.domain.com", RecordCNAME CLASS, "domain.com");
+    emdns_add_record("domain.com", RecordMX CLASS, "10 mail.domain.com");
+    emdns_add_record("domain.com", RecordMX CLASS, "20 mail2.domain.com");
+    emdns_add_record("domain.com", RecordTXT CLASS, "v=spf1 mx a:mail.domain.com -all");
+    emdns_add_record("example.com", RecordA CLASS, "22.33.44.55");
+    emdns_add_record("example.com", RecordNS CLASS, "mail.domain.com");
+    emdns_add_record("google.com", RecordA CLASS, "8.8.8.8");
+    emdns_remove_record("domain.com", RecordMX CLASS);
+    
+#ifdef EMDNS_SUPPORT_ALL_CLASSES  
+    emdns_add_record("google.com", RecordA, ClassHS, "1.2.3.4");
+#endif    
     
     while(1){
         n = recvfrom(sockfd, (char *)buffer, MAXLINE,  

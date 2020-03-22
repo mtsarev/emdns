@@ -10,7 +10,6 @@
 
 typedef enum {
     INIT,
-    COMMENT,
     COMMAND,
     ORIGIN,
     RECORD,
@@ -271,9 +270,6 @@ uint16_t masterfile_parse(FILE* s) {
                 if (c == DOLLAR) {
                     state = COMMAND;
                 }
-                else if (c == SEMICOLON) {
-                    state = COMMENT;
-                }
                 else if (!is_end_token()) {
                     keep();
                     state = RECORD;
@@ -300,12 +296,7 @@ uint16_t masterfile_parse(FILE* s) {
                 read_token(1);
                 store_token(domain_zone);
                 if (!expect(NEWLINE)) {
-                    if (c == SEMICOLON) {
-                        state = COMMENT;
-                    }
-                    else {
-                        return -1; // unexpected token
-                    }
+                    return -1; // unexpected token
                 }
                 else {
                     state = INIT;
@@ -322,12 +313,7 @@ uint16_t masterfile_parse(FILE* s) {
                 }
                     
                 if (!expect(NEWLINE)) {
-                    if (c == SEMICOLON) {
-                        state = COMMENT;
-                    }
-                    else {
-                        return -1; // unexpected token
-                    }
+                    return -1; // unexpected token
                 }
                 else {
                     state = INIT;
@@ -418,10 +404,7 @@ uint16_t masterfile_parse(FILE* s) {
                 records_added++;
 
                 if (!expect(NEWLINE)) {
-                    if (c == SEMICOLON) {
-                        state = COMMENT;
-                    }
-                    else if (c == EOF) {
+                    if (c == EOF) {
                         // all good - continue
                     }
                     else {
@@ -432,12 +415,6 @@ uint16_t masterfile_parse(FILE* s) {
                     state = INIT;
                 }
             }
-                break;
-
-            case COMMENT:
-                if (c == NEWLINE) {
-                    state = INIT;
-                }
                 break;
         }
 

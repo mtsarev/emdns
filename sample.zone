@@ -1,0 +1,32 @@
+$ORIGIN sample.com.
+sample.com.		IN	SOA	ns.sample.com. username.sample.com. ( 2007120710 3600 3600 1800 380 ) ; text
+@			IN	TXT	this is a test record
+@			IN	A	3.4.5.6				; test record
+sample.com.  752	IN	MX	10 mail.sample.com.
+sample.com.			MX	20 mail2.sample.com.
+subdomain.sample.com.	IN	CNAME   mail2.sample.com.
+mail			IN	A	192.0.2.3
+mail2				CNAME	mail
+
+$ORIGIN sample2.com.
+sample2.com.	IN	SOA ns.sample2.com. username.sample2.com. ( 2007120733 1280 1280 1280 1280 )
+			A 127.0.0.1
+subdomain		CNAME sample2.com.
+@		IN	TXT    Hello world!
+
+$ORIGIN example.com. 
+$TTL 86400 
+@	IN	SOA	dns1.example.com.	hostmaster.example.com. (
+			2001062501 ; serial                     
+			21600      ; refresh after 6 hours                     
+			3600       ; retry after 1 hour                     
+			604800     ; expire after 1 week                     
+			86400 )    ; minimum TTL of 1 day  
+		     
+		           
+	IN	NS	dns1.example.com.       
+	IN	NS	dns2.example.com.        
+	
+	
+	IN	MX	10	mail.example.com.       
+	IN	MX	20	mail2.example.com.        

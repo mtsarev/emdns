@@ -16,7 +16,7 @@ gcc *.c -o emdns
 ## Running emdns
 The compiled executable can be run directly:
 ```
-./emdns
+./emdns < sample.zone
 ```
 
 Default port is 5959 UDP.

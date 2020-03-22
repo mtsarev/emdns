@@ -56,8 +56,8 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
             case RecordCNAME:
             case RecordNS:
             case RecordPTR:
-                entry->length = strlen(response) + 2;
                 entry->response = _to_dns_string(response);
+                entry->length = strlen(entry->response) + 1;
                 break;
                 
             case RecordMX:
@@ -95,6 +95,8 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
                 *((uint32_t*)(p + 8)) = htonl(retry);
                 *((uint32_t*)(p + 12)) = htonl(expire);
                 *((uint32_t*)(p + 16)) = htonl(minimum);
+                
+                entry->length = strlen(server_dns) + 1 + strlen(mail_dns) + 1 + (5 * sizeof(uint32_t));
                 
                 free(server);
                 free(mail);

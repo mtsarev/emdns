@@ -6,6 +6,7 @@
 #include "string.h"
 #include "emsettings.h"
 #include "emdns.h"
+#include "masterfile.h"
 
 #define PORT     5959
 #define MAXLINE  128 
@@ -39,6 +40,9 @@ int main(int argc, char** argv) {
     } 
     
     len = sizeof(cliaddr);
+    
+    signed char result = masterfile_parse(stdin);
+    printf("Parsed file: %d\n", result);
     
 #ifdef EMDNS_SUPPORT_ALL_CLASSES  
 #define CLASS ,ClassIN

@@ -5,6 +5,10 @@
 #include "stdlib.h"
 #include "arpa/inet.h"
 
+#define PACK8(val)  ((*(uint8_t*)p) = (val));  p++;
+#define PACK16(val) ((*(uint16_t*)p) = (val)); p+=2;
+#define PACK32(val) ((*(uint32_t*)p) = (val)); p+=4;
+
 typedef struct emdns_record_t{
     struct emdns_record_t* next;
     dns_record_t record_type;
@@ -248,11 +252,13 @@ void emdns_resolve_raw(char* request_buffer, char** response_buffer, uint16_t* a
 #endif
         decoded->ancount = htons(1);
 
-        *((uint16_t*) (p + len + 3)) = htons(ClassIN);
-        *((uint32_t*) (p + len + 5)) = htonl(record->ttl);
-        *((uint32_t*) (p + len + 9)) = htons(record->length);
+        p = p + len + 3;
+        PACK16(htons(ClassIN));
+        PACK32(htonl(record->ttl));
+        PACK16(htons(record->length));
         
-        memcpy(p + len + 11, record->response, record->length);
+        memcpy(p, record->response, record->length);
+        p = p + record->length; 
         
         *answer_len = sizeof (dns_header_t) + len + 11 + record->length;
         

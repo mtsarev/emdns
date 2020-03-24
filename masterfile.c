@@ -397,9 +397,9 @@ uint16_t masterfile_parse(FILE* s) {
 
                 // pass to emdns core
 #ifdef EMDNS_SUPPORT_ALL_CLASSES                     
-                emdns_add_record(domain, type, class, response);
+                emdns_add_record(domain, type, class, response, ttl);
 #else
-                emdns_add_record(domain, type, response);
+                emdns_add_record(domain, type, response, ttl);
 #endif                
                 records_added++;
 

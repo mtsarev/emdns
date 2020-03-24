@@ -12,9 +12,10 @@
  * @param record_type record type
  * @param record_class record class
  * @param response response to return
+ * @param ttl time to live in seconds
  * @return 0 = success, everything else is an error code
  */
-int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response);
+int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response, uint32_t ttl);
 #else
 /**
  * Add a record to the DNS zone.
@@ -22,9 +23,10 @@ int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_
  * @param domain domain name
  * @param record_type record type
  * @param response response to return
+ * @param ttl time to live in seconds
  * @return 0 = success, everything else is an error code
  */
-int emdns_add_record(char* domain, dns_record_t record_type, char* response);
+int emdns_add_record(char* domain, dns_record_t record_type, char* response, uint32_t ttl);
 #endif
 
 #ifdef EMDNS_SUPPORT_ALL_CLASSES

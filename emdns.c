@@ -13,6 +13,7 @@ typedef struct emdns_record_t{
 #endif    
     char* domain;
     char* response;
+    uint32_t ttl;
     uint16_t length;
 } emdns_record_t;
 
@@ -29,9 +30,9 @@ static emdns_record_t* _find_record(char* domain, dns_record_t record_type);
 #endif
 
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
-int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response) {
+int emdns_add_record(char* domain, dns_record_t record_type, dns_class_t record_class, char* response, uint32_t ttl) {
 #else
-int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
+int emdns_add_record(char* domain, dns_record_t record_type, char* response, uint32_t ttl) {
 #endif    
     
 #ifdef EMDNS_ENABLE_LOGGING    
@@ -42,6 +43,7 @@ int emdns_add_record(char* domain, dns_record_t record_type, char* response) {
     if (entry != 0) {
         entry->domain = _to_dns_string(domain);
         entry->record_type = record_type;
+        entry->ttl = ttl;
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
         entry->record_class = record_class;
 #endif        
@@ -247,7 +249,7 @@ void emdns_resolve_raw(char* request_buffer, char** response_buffer, uint16_t* a
         decoded->ancount = htons(1);
 
         *((uint16_t*) (p + len + 3)) = htons(ClassIN);
-        *((uint32_t*) (p + len + 5)) = 0; // ttl
+        *((uint32_t*) (p + len + 5)) = htonl(record->ttl);
         *((uint32_t*) (p + len + 9)) = htons(record->length);
         
         memcpy(p + len + 11, record->response, record->length);

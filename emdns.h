@@ -58,9 +58,10 @@ int emdns_remove_record(char* domain, dns_record_t record_type);
  * 
  * @param request_buffer the request as received via the network
  * @param answer_buffer response will be prepared here
+ * @param response_max buffer size of response buffer
  * @param answer_len this is the real size of the response
  */
-void emdns_resolve_raw(char* request_buffer, char** answer_buffer, uint16_t* answer_len);
+void emdns_resolve_raw(char* request_buffer, char* answer_buffer, uint16_t response_max, uint16_t* answer_len);
 
 #endif /* EMDNS_H */
 

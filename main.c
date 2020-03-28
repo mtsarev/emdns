@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
     
     printf("Starting DNS server...\n");
     char buffer[MAXLINE]; 
+    char buffer_response[MAXLINE]; 
     
     struct sockaddr_in servaddr, cliaddr; 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -70,12 +71,10 @@ int main(int argc, char** argv) {
                     MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
                     &len); 
 
-        char* answer_buffer;
         uint16_t answer_len;
+        emdns_resolve_raw(buffer, buffer_response, MAXLINE, &answer_len);
 
-        emdns_resolve_raw(buffer, &answer_buffer, &answer_len);
-
-        sendto(sockfd, (const char *)answer_buffer, answer_len,  
+        sendto(sockfd, (const char *)buffer_response, answer_len,  
             MSG_CONFIRM, (const struct sockaddr *) &cliaddr,  len); 
     }
     

@@ -182,6 +182,10 @@ static void read_token_eol(char ignore_quotes) {
             keep();
         }
         else {
+            if(ignore_quotes && in_quote){
+                nextchar();
+                expect(NEWLINE);
+            }
             reset();
             return;
         }

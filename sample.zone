@@ -1,6 +1,6 @@
 $ORIGIN sample.com.
 sample.com.		IN	SOA	ns.sample.com. username.sample.com. ( 2007120710 3600 3600 1800 380 ) ; text
-@			IN	TXT	this is a test record
+@			IN	TXT	"this is a test record"
 @			IN	A	3.4.5.6				; test record
 sample.com.  752	IN	MX	10 mail.sample.com.
 sample.com.			MX	20 mail2.sample.com.

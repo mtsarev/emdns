@@ -20,6 +20,7 @@ static parsing_state_t state = INIT;
 static FILE* stream;
 static const char DOLLAR = '$';
 static const char SEMICOLON = ';';
+static const char QUOTE = '"';
 static const char SPACE = ' ';
 static const char TAB = '\t';
 static const char NEWLINE = '\n';
@@ -43,7 +44,7 @@ static char is_numeric();
 static void reset();
 static char is_end_token();
 static void read_token(char ignore_white);
-static void read_token_eol();
+static void read_token_eol(char ignore_quotes);
 static char expect(char expected);
 static void store_token(char* dest);
 static void ignore_whitespace();
@@ -168,10 +169,16 @@ static void read_tokens(uint8_t count) {
     }
 }
 
-static void read_token_eol() {
+static void read_token_eol(char ignore_quotes) {
+    char in_quote = 0;
     ignore_whitespace();
+    if(ignore_quotes && c == QUOTE){
+        in_quote = 1;
+        nextchar();
+    }
     while (1) {
-        if (c != NEWLINE && c != SEMICOLON && c != EOF) {
+        char quote_terminates_token = (ignore_quotes && in_quote && c == QUOTE);
+        if (c != NEWLINE && c != SEMICOLON && c != EOF && !quote_terminates_token) {
             keep();
         }
         else {
@@ -383,7 +390,7 @@ uint16_t masterfile_parse(FILE* s) {
                     read_tokens(7);
                 }
                 else if(type == RecordTXT){
-                    read_token_eol();
+                    read_token_eol(1);
                 }
                 
                 store_token(response);

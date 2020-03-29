@@ -263,31 +263,48 @@ void emdns_resolve_raw(char* request_buffer, char* response_buffer, uint16_t res
     UNPACK16_N2H(request_buffer, class);
 
     emdns_record_t* record = records;
-    while(1){
+    while (1) {
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
         emdns_record_t* record = _find_record(requested_domain, type, class, record);
 #else
         record = (class == ClassIN ? _find_record(requested_domain, type, record) : 0);
 #endif
-        if(record == 0){
+        if (record == 0) {
+#ifndef EMDNS_DISABLE_ALIAS_RESOLVING
+            if (type != RecordCNAME) {
+                // try to find alias
+#ifdef EMDNS_SUPPORT_ALL_CLASSES                
+                emdns_record_t* alias = _find_record(requested_domain, RecordCNAME, class, records);
+#else
+                emdns_record_t* alias = _find_record(requested_domain, RecordCNAME, records);
+#endif                
+                if (alias) {
+                    response->ancount++;
+                    pack_resource_record(alias, &response_buffer);
+                    requested_domain = alias->response;
+                    record = records;
+                    continue;
+                }
+            }
+#endif                        
             break;
         }
-        else{
+        else {
             response->ancount++;
             pack_resource_record(record, &response_buffer);
             record = record->next;
         }
     }
-    
+
 #ifdef EMDNS_ENABLE_LOGGING
     printf("%d records found.\n", response->ancount);
 #endif      
-    
+
     if (response->ancount == 0) {
         response->flags = htons(FlagQR | FlagAA | FlagErrName);
         *answer_len = sizeof (dns_header_t);
     }
-    else{
+    else {
         response->ancount = htons(response->ancount);
         *answer_len = (response_buffer - (char*) response);
     }

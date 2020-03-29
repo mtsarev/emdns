@@ -19,3 +19,7 @@ jobs:
       run: make clean
     - name: make (all classes enabled)
       run: make CFLAGS=-DEMDNS_SUPPORT_ALL_CLASSES
+    - name: clean
+      run: make clean
+    - name: make (disable auto alias resolving)
+      run: make CFLAGS=-DEMDNS_DISABLE_ALIAS_RESOLVING

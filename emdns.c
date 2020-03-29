@@ -16,7 +16,6 @@
 #define UNPACK32_N2H(p, val) val = ntohl(*((uint32_t*)(p))); p+=4;
 #define MOVE(p, count) p+=(count);
 
-
 typedef struct emdns_record_t {
     struct emdns_record_t* next;
     dns_record_t record_type;
@@ -34,11 +33,12 @@ static emdns_record_t* records;
 
 static char* _to_dns_string(char* domain);
 static uint32_t _to_ip_value(char* ip);
+static void pack_resource_record(emdns_record_t* record, char** response_buffer);
 
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
-static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class);
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class, emdns_record_t* start);
 #else
-static emdns_record_t* _find_record(char* domain, dns_record_t record_type);
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, emdns_record_t* start);
 #endif
 
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
@@ -217,12 +217,12 @@ static uint32_t _to_ip_value(char* ip) {
 
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
 
-static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class) {
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, dns_class_t record_class, emdns_record_t* start) {
 #else
 
-static emdns_record_t* _find_record(char* domain, dns_record_t record_type) {
+static emdns_record_t* _find_record(char* domain, dns_record_t record_type, emdns_record_t* start) {
 #endif
-    emdns_record_t* ptr_record = records;
+    emdns_record_t* ptr_record = start;
     while (ptr_record != 0) {
         if (ptr_record->record_type == record_type &&
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
@@ -239,12 +239,12 @@ static emdns_record_t* _find_record(char* domain, dns_record_t record_type) {
 void emdns_resolve_raw(char* request_buffer, char* response_buffer, uint16_t response_max, uint16_t* answer_len) {
     dns_header_t* request = (dns_header_t*) request_buffer;
     dns_header_t* response = (dns_header_t*) response_buffer;
-  
+
     // prepare header
     memcpy(response_buffer, request_buffer, sizeof (dns_header_t));
     MOVE(request_buffer, sizeof (dns_header_t));
     MOVE(response_buffer, sizeof (dns_header_t));
-    
+
     response->flags = htons(FlagQR | FlagAA); // set response and AA flag
     response->qdcount = htons(0);
     response->ancount = htons(0);
@@ -254,47 +254,61 @@ void emdns_resolve_raw(char* request_buffer, char* response_buffer, uint16_t res
     // prepare domain
     uint8_t* requested_domain = request_buffer;
     uint8_t len = strlen(request_buffer);
-    memcpy(response_buffer, request_buffer, len + 1);
+
     MOVE(request_buffer, len + 1);
-    MOVE(response_buffer, len + 1);
-    
+
     dns_record_t type;
     dns_class_t class;
     UNPACK16_N2H(request_buffer, type);
     UNPACK16_N2H(request_buffer, class);
-    
-    
+
+    emdns_record_t* record = records;
+    while(1){
 #ifdef EMDNS_SUPPORT_ALL_CLASSES
-    emdns_record_t* record = _find_record(requested_domain, type, class);
+        emdns_record_t* record = _find_record(requested_domain, type, class, record);
 #else
-    emdns_record_t* record = (class == ClassIN ? _find_record(requested_domain, type) : 0);
+        record = (class == ClassIN ? _find_record(requested_domain, type, record) : 0);
 #endif
-
-    if (record != 0) {
-#ifdef EMDNS_ENABLE_LOGGING
-        printf("Record found.\n");
-#endif
-        response->ancount = htons(1);
-        
-        // pack resource record
-        PACK16(response_buffer, htons(type));
-        PACK16(response_buffer, htons(class));
-        PACK32(response_buffer, htonl(record->ttl));
-        PACK16(response_buffer, htons(record->length));
-
-        memcpy(response_buffer, record->response, record->length);
-        MOVE(response_buffer, record->length);
-
-        *answer_len = (response_buffer - (char*)response);
-
+        if(record == 0){
+            break;
+        }
+        else{
+            response->ancount++;
+            pack_resource_record(record, &response_buffer);
+            record = record->next;
+        }
     }
-    else {
-
+    
 #ifdef EMDNS_ENABLE_LOGGING
-        printf("Record not found.\n");
-#endif
-
+    printf("%d records found.\n", response->ancount);
+#endif      
+    
+    if (response->ancount == 0) {
         response->flags = htons(FlagQR | FlagAA | FlagErrName);
         *answer_len = sizeof (dns_header_t);
+    }
+    else{
+        response->ancount = htons(response->ancount);
+        *answer_len = (response_buffer - (char*) response);
+    }
+}
+
+static void pack_resource_record(emdns_record_t* record, char** response_buffer) {
+    if (record != 0) {
+        uint16_t len = strlen(record->domain);
+        memcpy(*response_buffer, record->domain, len + 1);
+        MOVE(*response_buffer, len + 1);
+
+        PACK16(*response_buffer, htons(record->record_type));
+#ifdef EMDNS_SUPPORT_ALL_CLASSES        
+        PACK16(*response_buffer, htons(record->record_class));
+#else
+        PACK16(*response_buffer, htons(ClassIN));
+#endif
+        PACK32(*response_buffer, htonl(record->ttl));
+        PACK16(*response_buffer, htons(record->length));
+
+        memcpy(*response_buffer, record->response, record->length);
+        MOVE(*response_buffer, record->length);
     }
 }

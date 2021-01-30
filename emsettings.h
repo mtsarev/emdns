@@ -1,10 +1,11 @@
 #ifndef EMSETTINGS_H
 #define EMSETTINGS_H
 
-// repeat queries in the response
-#define EMDNS_ECHO_QUERIES 0
+#undef EMDNS_ENABLE_LOGGING
 
-#define EMDNS_ENABLE_LOGGING
+#undef EMDNS_SUPPORT_ALL_CLASSES
+
+#undef EMDNS_DISABLE_ALIAS_RESOLVING
 
 #endif /* EMSETTINGS_H */
 

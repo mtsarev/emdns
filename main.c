@@ -9,19 +9,20 @@
 #include "masterfile.h"
 
 #define PORT     5959
-#define MAXLINE  128 
+#define BUF_SIZE  128 
 
 int main(int argc, char** argv) {
     setvbuf(stdout, 0, _IOLBF, 0);
     
     printf("Starting DNS server...\n");
-    char buffer[MAXLINE]; 
-    char buffer_response[MAXLINE]; 
+    
+    char buf_request[BUF_SIZE]; 
+    char buf_response[BUF_SIZE]; 
     
     struct sockaddr_in servaddr, cliaddr; 
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0){
-        printf("error opening socket");
+        perror("Error: could not open socket.");
         exit(EXIT_FAILURE); 
     }
     
@@ -31,20 +32,20 @@ int main(int argc, char** argv) {
     servaddr.sin_family    = AF_INET; // IPv4 
     servaddr.sin_addr.s_addr = INADDR_ANY; 
     servaddr.sin_port = htons(PORT);    
-    
-    int len, n; 
-    if ( bind(sockfd, (const struct sockaddr *)&servaddr,  
-            sizeof(servaddr)) < 0 ) 
-    { 
-        perror("bind failed"); 
-        exit(EXIT_FAILURE); 
+
+    int len, n;
+    if (bind(sockfd, (const struct sockaddr *) &servaddr, sizeof (servaddr)) < 0) {
+        perror("Error: bind failed.");
+        exit(EXIT_FAILURE);
     } 
     
     len = sizeof(cliaddr);
     
+    // example parsing from stdin
     signed char result = masterfile_parse(stdin);
-    printf("Parsed file: %d\n", result);
+    printf("Parsed file: %d entries\n", result);
     
+    // example adding entries by function call
 #ifdef EMDNS_SUPPORT_ALL_CLASSES  
 #define CLASS ,ClassIN
 #else
@@ -66,15 +67,21 @@ int main(int argc, char** argv) {
     emdns_add_record("google.com", RecordA, ClassHS, "1.2.3.4", 3600);
 #endif    
     
+    printf("DNS server started.\n");
+    
     while(1){
-        n = recvfrom(sockfd, (char *)buffer, MAXLINE,  
+        n = recvfrom(sockfd, (char *)buf_request, BUF_SIZE,  
                     MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
                     &len); 
 
+#ifdef EMDNS_ENABLE_LOGGING
+        printf("Request received. ");
+#endif
+        
         uint16_t answer_len;
-        emdns_resolve_raw(buffer, buffer_response, MAXLINE, &answer_len);
+        emdns_resolve_raw(buf_request, buf_response, BUF_SIZE, &answer_len);
 
-        sendto(sockfd, (const char *)buffer_response, answer_len,  
+        sendto(sockfd, (const char *)buf_response, answer_len,  
             MSG_CONFIRM, (const struct sockaddr *) &cliaddr,  len); 
     }
     

@@ -8,6 +8,7 @@
 
 #define EMDNS_PARSER_TEMPBUF 128
 
+// state of parser
 typedef enum {
     INIT,
     COMMAND,
@@ -18,12 +19,17 @@ typedef enum {
 
 static parsing_state_t state = INIT;
 static FILE* stream;
+
+// constants
 static const char DOLLAR = '$';
 static const char SEMICOLON = ';';
 static const char QUOTE = '"';
 static const char SPACE = ' ';
 static const char TAB = '\t';
 static const char NEWLINE = '\n';
+static const char ZERO = '0';
+static const char NINE = '9';
+
 static char buf[EMDNS_PARSER_TEMPBUF];
 static char domain_zone[64];
 static char domain[64];
@@ -111,7 +117,7 @@ static char is(char* string) {
 static char is_numeric() {
     char* p = buf;
     while (*p != '\0') {
-        if ((*p < '0') || (*p > '9')) {
+        if ((*p < ZERO) || (*p > NINE)) {
             return 0;
         }
         p++;
@@ -267,11 +273,11 @@ static char to_absolute(char* str){
     strcpy(++str, domain_zone);
 }
 
-uint16_t masterfile_parse(FILE* s) {
+int16_t masterfile_parse(FILE* s) {
     stream = s;
     nextchar();
     reset();
-    uint16_t records_added = 0;
+    int16_t records_added = 0;
 
 
     while (c != EOF) {
@@ -408,10 +414,16 @@ uint16_t masterfile_parse(FILE* s) {
 
                 // pass to emdns core
 #ifdef EMDNS_SUPPORT_ALL_CLASSES                     
-                emdns_add_record(domain, type, class, response, ttl);
+                int added = emdns_add_record(domain, type, class, response, ttl);
 #else
-                emdns_add_record(domain, type, response, ttl);
+                int added = emdns_add_record(domain, type, response, ttl);
 #endif                
+                if(added != 0)
+                {
+                    // record was not added; return added entries as negative number
+                    return -records_added;
+                }
+                
                 records_added++;
 
                 if (!expect(NEWLINE)) {

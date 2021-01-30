@@ -45,5 +45,10 @@ Keep in mind that this changes the interface and adds an additional parameter (t
 make CFLAGS=-DEMDNS_DISABLE_ALIAS_RESOLVING
 ```
 
+`EMDNS_ENABLE_LOGGING` If you want to enable logging of additional information on stdout, set the `EMDNS_ENABLE_LOGGING` define:
+```
+make CFLAGS=-DEMDNS_ENABLE_LOGGING
+```
+
 ## Stability and open issues
 This software is still under development, therefore it is not considered stable and might not function properly. If you have problems, feel free to open an issue.

@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "inttypes.h"
 
-uint16_t masterfile_parse(FILE* stream);
+int16_t masterfile_parse(FILE* stream);
 
 #endif /* MASTERFILE_H */
 
